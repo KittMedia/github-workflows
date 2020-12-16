@@ -1,0 +1,28 @@
+name: run npm build
+on: [push]
+jobs:
+  run:
+    name: run npm build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: bahmutov/npm-install@v1
+      - name: Run
+        run: npm run build
+      # Move all files that should be uploaded to a new directory
+      - run: mkdir ${{ github.event.repository.name }}-build && rsync -a --exclude-from='.github/exclude_list' . ${{ github.event.repository.name }}-build
+      # Upload artifacts
+      - uses: actions/upload-artifact@v2
+        with:
+          name: ${{ github.event.repository.name }}
+          path: ${{ github.event.repository.name }}-build
+  # Attach to artifacts
+  download:
+    name: Download Artifacts
+    needs: [run]
+    runs-on: ubuntu-latest
+    steps:
+      - name: release
+        uses: actions/download-artifact@v2
+        with:
+          name: ${{ github.event.repository.name }}
