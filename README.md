@@ -14,13 +14,23 @@ Build a package for WoltLab Suite.
 
 ### release-package.yaml
 
-Create a release when a tag is added and attach a built package to it.
+Creates a release when a tag is added and attach a built package to it.
 
 ## WordPress
 
+### asset-compilation-and-minification.yml
+
+Compiles SCSS/SASS and minifies CSS/JavaScript.
+
+Also runs `npm run build` and build an artifact with exclusions (requires a file in `.github/exclude_list`). Can be used for Gutenberg blocks via `@wordpress/scripts`.
+
+#### Usage for a theme
+
+For a theme, use a different destination for SCSS/SASS compilation as the files need to be in the root directory. The destination is already in the template but commented out. Comment out the earlier destination and remove the `#` sign of the theme destination (`destination: ${{ github.repository }}`).
+
 ### npm.yml
 
-Run `npm run build` and build an artifact with exclusions (requires a file in `.github/exclude_list`). Can be used for simple Gutenberg blocks via `@wordpress/scripts`.
+Runs `npm run build` and build an artifact with exclusions (requires a file in `.github/exclude_list`). Can be used for simple Gutenberg blocks via `@wordpress/scripts`.
 
 ## License
 

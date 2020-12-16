@@ -1,0 +1,49 @@
+name: asset compilation and minification
+on: [push]
+jobs:
+  run:
+    name: asset compilation and minification
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      # Compile CSS
+      - name: Compile CSS
+        uses: gha-utilities/sass-build@v0.2.5
+        with:
+          source: assets/style/scss/style.scss
+          destination: assets/style/style.css
+          # For a theme, use this destination instead:
+          #destination: ${{ github.repository }}
+          outputStyle: expanded
+      - name: Compile CSS compressed
+        uses: gha-utilities/sass-build@v0.2.5
+        with:
+          source: assets/style/scss/style.scss
+          destination: assets/style/style.min.css
+          outputStyle: compressed
+      # Minify asset JavaScript
+      - name: Minify JavaScript
+        uses: nizarmah/auto-minify@v2.0
+        with:
+          directory: assets/js
+      # Run npm build
+      - uses: bahmutov/npm-install@v1
+      - name: Run
+        run: npm run build
+      # Move all files that should be uploaded to a new directory
+      - run: mkdir ${{ github.event.repository.name }}-build && rsync -a --exclude-from='.github/exclude_list' . ${{ github.event.repository.name }}-build
+      # Upload artifacts
+      - uses: actions/upload-artifact@v2
+        with:
+          name: ${{ github.event.repository.name }}
+          path: ${{ github.event.repository.name }}-build
+  # Attach to artifacts
+  download:
+    name: Download Artifacts
+    needs: [run]
+    runs-on: ubuntu-latest
+    steps:
+      - name: release
+        uses: actions/download-artifact@v2
+        with:
+          name: ${{ github.event.repository.name }}
