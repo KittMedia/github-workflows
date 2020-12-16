@@ -4,15 +4,15 @@ Different workflow templates for different workflows.
 
 ## WoltLab
 
-### build-application.yaml
+### build-application.yml
 
 Build a package and a fully installable application for WoltLab Suite.
 
-### build-package.yaml
+### build-package.yml
 
 Build a package for WoltLab Suite.
 
-### release-package.yaml
+### release-package.yml
 
 Creates a release when a tag is added and attach a built package to it.
 
