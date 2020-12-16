@@ -1,0 +1,82 @@
+name: build application
+on: [push]
+jobs:
+  build:
+    name: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      # Create package
+      - name: WoltLab Suite Package Creation
+        uses: KittMedia/action-wsc-package-create@v1
+      # Get WCF
+      - uses: actions/checkout@v2
+        with:
+          repository: WoltLab/WCF
+          ref: master
+          path: WCF
+      # Get licenses
+      - uses: actions/checkout@v2
+        with:
+          repository: KittMedia/licenses
+          ref: master
+          path: licenses
+      - run: cp licenses/commercial/*.txt WCF/wcfsetup/setup/license/
+      # Build setup file
+      - run: cp ${{ github.event.repository.name }}.tar.gz WCF/wcfsetup/install/packages/ && cd WCF/wcfsetup/install/packages/ && gunzip ${{ github.event.repository.name }}.tar.gz && cd ../../../..
+      - run: cd WCF/com.woltlab.wcf/templates/ && tar cfv ../templates.tar * && cd .. && tar cfv ../wcfsetup/install/packages/com.woltlab.wcf.tar --exclude=templates * && cd ../..
+      # Minify JavaScript via npm
+      - uses: bahmutov/npm-install@v1
+        with:
+          working-directory: WCF/extra
+      - run: sed -i "s#\"r.js\"#\"../../../../extra/node_modules/.bin/r_js\"#g" WCF/extra/_buildCore.js
+      - name: Minify JavaScript
+        run: node _buildCore.js
+        working-directory: WCF/extra
+      # Packing things up
+      - run: cd WCF/wcfsetup && tar czf ../../WCFSetup.tar.gz --exclude=.git* --exclude=.buildOrder install setup
+      # Copy PHP files to root directory
+      - run: cp WCF/wcfsetup/install.php WCF/wcfsetup/test.php .
+      # Install SSH key
+      - name: Install SSH key
+        uses: shimataro/ssh-key-action@v2
+        with:
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          known_hosts: ${{ secrets.KNOWN_HOSTS }}
+      # Transfer file to remote server
+      - run: ssh ${{ secrets.REMOTE_USER }}@${{ secrets.REMOTE_HOST }} "mkdir -p ${{ secrets.REMOTE_PATH_BASE }}/${{ github.event.repository.name }}/${{ github.sha }}"
+      - run: scp ${{ github.event.repository.name }}.tar.gz install.php test.php WCFSetup.tar.gz ${{ secrets.REMOTE_USER }}@${{ secrets.REMOTE_HOST }}:${{ secrets.REMOTE_PATH_BASE }}/${{ github.event.repository.name }}/${{ github.sha }}
+      # Setup artifacts
+      - run: mkdir standalone && mv install.php test.php WCFSetup.tar.gz standalone
+      - run: mkdir update && cp ${{ github.event.repository.name }}.tar.gz update
+      # Upload artifacts
+      - uses: actions/upload-artifact@v2
+        with:
+          name: ${{ github.event.repository.name }}
+          path: |
+            standalone
+            update
+      # Notification via Slack
+      - name: Slack Notification
+        uses: rtCamp/action-slack-notify@v2
+        env:
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+          SLACK_USERNAME: ${{ github.event.repository.name }}
+          SLACK_ICON: https://avatars0.githubusercontent.com/u/75954244?s=200&v=4
+          SLACK_TITLE: Download URL
+          SLACK_MESSAGE: |
+            https://git.kitt.media/${{ github.event.repository.name }}/${{ github.sha }}/${{ github.event.repository.name }}.tar.gz
+            https://git.kitt.media/${{ github.event.repository.name }}/${{ github.sha }}/install.php
+            https://git.kitt.media/${{ github.event.repository.name }}/${{ github.sha }}/test.php
+            https://git.kitt.media/${{ github.event.repository.name }}/${{ github.sha }}/WCFSetup.tar.gz
+          SLACK_FOOTER: ''
+  # Attach to artifacts
+  download:
+    name: Download Artifacts
+    needs: [build]
+    runs-on: ubuntu-latest
+    steps:
+      - name: release
+        uses: actions/download-artifact@v2
+        with:
+          name: ${{ github.event.repository.name }}
