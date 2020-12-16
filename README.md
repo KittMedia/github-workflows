@@ -22,6 +22,19 @@ Creates a release when a tag is added and attach a built package to it.
 
 Compiles SCSS/SASS and minifies CSS/JavaScript.
 
+It assumes this structure:
+
+```
+|-- assets
+|   |-- js
+|   |   |-- some-js-file.js
+|   `-- style
+|       `-- scss
+|           `-- style.scss
+```
+
+If you have a different structure, change the paths accordingly for the steps `Compile CSS` and `Minify JavaScript`.
+
 Also runs `npm run build` and build an artifact with exclusions (requires a file in `.github/exclude_list`). Can be used for Gutenberg blocks via `@wordpress/scripts`.
 
 #### Usage for a theme
