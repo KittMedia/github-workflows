@@ -6,4 +6,4 @@
           known_hosts: ${{ secrets.KNOWN_HOSTS }}
       # Transfer file to remote server
       - run: ssh ${{ secrets.REMOTE_USER }}@${{ secrets.REMOTE_HOST }} "mkdir -p ${{ secrets.REMOTE_PATH_BASE }}/${{ github.event.repository.name }}/${{ github.sha }}"
-      - run: scp * ${{ secrets.REMOTE_USER }}@${{ secrets.REMOTE_HOST }}:${{ secrets.REMOTE_PATH_BASE }}/${{ github.event.repository.name }}/${{ github.sha }}
+      - run: rsync -ahv * ${{ secrets.REMOTE_USER }}@${{ secrets.REMOTE_HOST }}:${{ secrets.REMOTE_PATH_BASE }}/${{ github.event.repository.name }}/${{ github.sha }}
