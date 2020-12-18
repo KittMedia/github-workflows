@@ -13,13 +13,15 @@ jobs:
           source: assets/style/scss/style.scss
           destination: assets/style/style.css
           # For a theme, use this destination instead:
-          #destination: ${{ github.repository }}
+          #destination: style.css
           outputStyle: expanded
       - name: Compile CSS compressed
         uses: gha-utilities/sass-build@v0.2.5
         with:
           source: assets/style/scss/style.scss
           destination: assets/style/style.min.css
+          # For a theme, use this destination instead:
+          #destination: style.min.css
           outputStyle: compressed
       # Minify asset JavaScript
       - name: Minify JavaScript
