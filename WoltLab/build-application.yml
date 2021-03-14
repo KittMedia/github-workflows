@@ -6,14 +6,25 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+      # Get requirements/optionals
+      # uncomment the following lines and adjust if needed
+      #- uses: actions/checkout@v2
+      #  with:
+      #    repository: KittMedia/com.kittmedia.wsc.tcpdf
+      #    ref: master
+      #    path: requirements/com.kittmedia.wsc.tcpdf
       # Create package
       - name: WoltLab Suite Package Creation
         uses: KittMedia/action-wsc-package-create@main
       # Get WCF
+      - uses: oprypin/find-latest-tag@v1
+        with:
+          repository: WoltLab/WCF
+        id: wcftag
       - uses: actions/checkout@v2
         with:
           repository: WoltLab/WCF
-          ref: master
+          ref: ${{ steps.wcftag.outputs.tag }}
           path: WCF
       # Get licenses
       - uses: actions/checkout@v2
